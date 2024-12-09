@@ -2,6 +2,10 @@ name: Ruby
 
 on:
   push:
+  
+permissions:
+  contents: read
+  issues: write 
 
 jobs:
   build:
@@ -20,7 +24,7 @@ jobs:
       - name: Set up Ruby and Bundler
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 3.0.1
+          ruby-version: 3.3.0
           bundler-cache: true
       - name: Set up Node
         uses: actions/setup-node@v2
@@ -31,8 +35,8 @@ jobs:
         run: yarn --frozen-lockfile
       - name: Create Evaluation File
         run: |
-          echo -e "---\ntitle: DIVE INTO CODE：Notification about the assessment of the assignment\n---\n## The assignment could not be evaluated.\n### Please check the following items.\n- Do you have the necessary gems (rspec-rails and rexml) installed to run RSpec?\n**If the above does not solve the problem, please post the URL of this repository on the DIVER question submission page and let us know that the issue is not being evaluated.**" > .github/execution_error_template.md
-          git clone -b en https://github.com/diveintocode-corp/cdp_web_ruby_oop_task_evaluation_code.git spec
+          rm -rf spec
+          git clone https://github.com/seiyamiyaoka/cdp_web_ruby_oop_task_evaluation_code.git spec
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
       - name: Create Feedback
@@ -48,6 +52,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           filename: .github/feedback_template.md
+      - name: Create Error File
+        if: failure()
+        run: |
+          echo -e "---\ntitle: ディープロ：課題評価に関するご連絡\n---\n## 課題の評価が実行できませんでした。\n### 以下の項目を確認してください。\n- クローン元のソースコードにあらかじめ用意されているGemfileのGemを削除したり、バージョンを変更したりしていませんか？\n- カリキュラムで推奨されているものと異なるバージョンのRubyを使用していませんか？\n- カリキュラムで推奨されているものと異なるバージョンのNode.jsを使用していませんか？\n\n**上記を確認して解決しない場合、お手数ですが、ディープロの質問投稿よりこちらのリポジトリのURLを投稿いただき、課題の評価が行われない旨をお知らせください。**" > .github/execution_error_template.md
       - uses: JasonEtco/create-an-issue@v2
         if: failure()
         env:
